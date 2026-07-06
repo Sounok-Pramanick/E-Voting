@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import './VotePoll.css';
+import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import "./VotePoll.css";
 import API_BASE from "./config";
 
 const partyOptions = [
@@ -9,7 +9,7 @@ const partyOptions = [
   { id: 3, name: "Indian National Congress", logo: "inc.png" },
   { id: 4, name: "Communist Party of India", logo: "cpi.png" },
   { id: 5, name: "Bahujan Samaj Party", logo: "bsp.png" },
-  { id: 9, name: "NOTA", logo: "nota.png" }
+  { id: 9, name: "NOTA", logo: "nota.png" },
 ];
 
 const VotePoll = () => {
@@ -21,37 +21,13 @@ const VotePoll = () => {
   const [timeLeft, setTimeLeft] = useState(30);
 
   const today = new Date();
-  const formattedDate = `${today.getDate().toString().padStart(2, '0')} - ${(
+  const formattedDate = `${today.getDate().toString().padStart(2, "0")} - ${(
     today.getMonth() + 1
   )
     .toString()
-    .padStart(2, '0')} - ${today.getFullYear()}`;
+    .padStart(2, "0")} - ${today.getFullYear()}`;
 
   const votingTime = { start: "09 : 00", end: "17 : 00" };
-
-  useEffect(() => {
-    if (voterData && voterData.remarks == 1) {
-      alert("Your vote has already been polled!");
-      navigate("/");
-    }
-  }, [voterData, navigate]);
-
-  useEffect(() => {
-    let timer;
-    if (showVoting && timeLeft > 0) {
-      timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
-    } else if (timeLeft === 0) {
-      alert("Voting session ended. Recording your response...");
-      autoSubmitVote();
-    }
-    return () => clearInterval(timer);
-  }, [showVoting, timeLeft]);
-
-  useEffect(() => {
-    if (showVoting) {
-      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
-    }
-  }, [showVoting]);
 
   const handleSubmitVote = async () => {
     if (!selectedParty) {
@@ -75,8 +51,8 @@ const VotePoll = () => {
           ward_no: voterData.ward_no,
           poll_no: selectedParty,
           gender: voterData.gender, // send M or F
-          mob: voterData.mob
-        })
+          mob: voterData.mob,
+        }),
       });
 
       const result = await response.json();
@@ -93,7 +69,7 @@ const VotePoll = () => {
     }
   };
 
-  const autoSubmitVote = async () => {
+  const autoSubmitVote = useCallback(async () => {
     if (!voterData) {
       alert("Voter data not found. Cannot record vote.");
       navigate("/");
@@ -110,8 +86,8 @@ const VotePoll = () => {
           ward_no: voterData.ward_no,
           poll_no: 0,
           gender: voterData.gender,
-          mob: voterData.mob
-        })
+          mob: voterData.mob,
+        }),
       });
 
       const result = await response.json();
@@ -126,7 +102,31 @@ const VotePoll = () => {
       alert("Server error. Try again later.");
       navigate("/");
     }
-  };
+  }, [voterData, navigate]);
+
+  useEffect(() => {
+    if (voterData && Number(voterData.remarks) === 1) {
+      alert("Your vote has already been polled!");
+      navigate("/");
+    }
+  }, [voterData, navigate]);
+
+  useEffect(() => {
+    let timer;
+    if (showVoting && timeLeft > 0) {
+      timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
+    } else if (timeLeft === 0) {
+      alert("Voting session ended. Recording your response...");
+      autoSubmitVote();
+    }
+    return () => clearInterval(timer);
+  }, [showVoting, timeLeft, autoSubmitVote]);
+
+  useEffect(() => {
+    if (showVoting) {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+    }
+  }, [showVoting]);
 
   return (
     <div className="vote-poll-container">
@@ -137,8 +137,12 @@ const VotePoll = () => {
       </div>
 
       <h2>Upcoming Election: State Assembly Election</h2>
-      <p><strong>Election Date:</strong> {formattedDate}</p>
-      <p><strong>Voting Time:</strong> {votingTime.start} - {votingTime.end}</p>
+      <p>
+        <strong>Election Date:</strong> {formattedDate}
+      </p>
+      <p>
+        <strong>Voting Time:</strong> {votingTime.start} - {votingTime.end}
+      </p>
 
       <h3>Contestants:</h3>
       <div className="party-list-vertical">
