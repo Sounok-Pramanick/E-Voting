@@ -1,0 +1,17 @@
+# React
+frontend/node_modules
+frontend/build
+
+# PHP
+backend/vendor
+backend/config.php
+
+# OS
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
